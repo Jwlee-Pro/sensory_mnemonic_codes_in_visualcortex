@@ -113,21 +113,9 @@ tempx_choice_mne_l = nan(nTR,2,length(sub_list));
 timing_m = []; 
 ref_m = []; 
 choice_m = []; 
-dec_m = []; 
-TR_dec_choice_1_e = []; 
-TR_dec_choice_2_e = []; 
-TR_dec_choice_1_l = []; 
-TR_dec_choice_2_l = []; 
-
-Sen_dec_choice_1_e = []; 
-Sen_dec_choice_2_e = []; 
-Sen_dec_choice_1_l = []; 
-Sen_dec_choice_2_l = []; 
-
-Mne_dec_choice_1_e = []; 
-Mne_dec_choice_2_e = []; 
-Mne_dec_choice_1_l = []; 
-Mne_dec_choice_2_l = []; 
+dec_tr = []; 
+dec_sen = []; 
+dec_mne = []; 
 for isub = runSub
     load(['/Volumes/ROOT/CSNL_temp/JWL/sensory_mnemonic_codes_in_visualcortex/data/decoded_estimated/VC_sub-' sub_list(isub,:) '_dec.mat'])
     [nTestTR, nTrials] = size(Decoded_result{1}.est); 
@@ -144,10 +132,10 @@ for isub = runSub
     end
     temp_sen_mean_e(:,isub) = 45-circ_mean(abs(errme_sensory(timing==1,:))*2*pi/180)*180/pi/2;
     temp_sen_mean_l(:,isub) = 45-circ_mean(abs(errme_sensory(timing==2,:))*2*pi/180)*180/pi/2;
-    temp_choice_sen_e(:,1,isub) = circ_mean((errme_sensory(timing==1 & choice==1,:))*2*pi/180)*180/pi/2;
-    temp_choice_sen_e(:,2,isub) = circ_mean((errme_sensory(timing==1 & choice==2,:))*2*pi/180)*180/pi/2;
-    temp_choice_sen_l(:,1,isub) = circ_mean((errme_sensory(timing==2 & choice==1,:))*2*pi/180)*180/pi/2;
-    temp_choice_sen_l(:,2,isub) = circ_mean((errme_sensory(timing==2 & choice==2,:))*2*pi/180)*180/pi/2;
+    temp_choice_sen_e(:,1,isub) = circ_mean((errme_sensory(timing==1 & choice==1 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_sen_e(:,2,isub) = circ_mean((errme_sensory(timing==1 & choice==2 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_sen_l(:,1,isub) = circ_mean((errme_sensory(timing==2 & choice==1 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_sen_l(:,2,isub) = circ_mean((errme_sensory(timing==2 & choice==2 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
     
     
     % Memory decoded
@@ -173,10 +161,10 @@ for isub = runSub
     temp_mne_mean_e(:,isub) = 45-circ_mean(abs(errme_memory(timing==1,:))*2*pi/180)*180/pi/2;
     temp_mne_mean_l(:,isub) = 45-circ_mean(abs(errme_memory(timing==2,:))*2*pi/180)*180/pi/2;
     
-    temp_choice_mne_e(:,1,isub) = circ_mean((errme_memory(timing==1 & choice==1,:))*2*pi/180)*180/pi/2;
-    temp_choice_mne_e(:,2,isub) = circ_mean((errme_memory(timing==1 & choice==2,:))*2*pi/180)*180/pi/2;
-    temp_choice_mne_l(:,1,isub) = circ_mean((errme_memory(timing==2 & choice==1,:))*2*pi/180)*180/pi/2;
-    temp_choice_mne_l(:,2,isub) = circ_mean((errme_memory(timing==2 & choice==2,:))*2*pi/180)*180/pi/2;
+    temp_choice_mne_e(:,1,isub) = circ_mean((errme_memory(timing==1 & choice==1 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_mne_e(:,2,isub) = circ_mean((errme_memory(timing==1 & choice==2 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_mne_l(:,1,isub) = circ_mean((errme_memory(timing==2 & choice==1 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_mne_l(:,2,isub) = circ_mean((errme_memory(timing==2 & choice==2 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
     
     
     % TR-TR
@@ -189,22 +177,12 @@ for isub = runSub
     end
     
     % All merged
-    
-    TR_dec_choice_1_e = [TR_dec_choice_1_e; errme_TR(timing==1 & choice==1,:)];
-    TR_dec_choice_2_e = [TR_dec_choice_2_e; errme_TR(timing==1 & choice==2,:)];
-    TR_dec_choice_1_l = [TR_dec_choice_1_l; errme_TR(timing==2 & choice==1,:)];
-    TR_dec_choice_2_l = [TR_dec_choice_2_l; errme_TR(timing==2 & choice==2,:)];
-    
-    Mne_dec_choice_1_e = [Mne_dec_choice_1_e; errme_memory(timing==1 & choice==1,:)];
-    Mne_dec_choice_2_e = [Mne_dec_choice_2_e; errme_memory(timing==1 & choice==2,:)];
-    Mne_dec_choice_1_l = [Mne_dec_choice_1_l; errme_memory(timing==2 & choice==1,:)];
-    Mne_dec_choice_2_l = [Mne_dec_choice_2_l; errme_memory(timing==2 & choice==2,:)];
-    
-    Sen_dec_choice_1_e = [Sen_dec_choice_1_e; errme_sensory(timing==1 & choice==1,:)];
-    Sen_dec_choice_2_e = [Sen_dec_choice_2_e; errme_sensory(timing==1 & choice==2,:)];
-    Sen_dec_choice_1_l = [Sen_dec_choice_1_l; errme_sensory(timing==2 & choice==1,:)];
-    Sen_dec_choice_2_l = [Sen_dec_choice_2_l; errme_sensory(timing==2 & choice==2,:)];
-    
+    timing_m = [timing_m timing]; 
+    ref_m = [ref_m ref]; 
+    choice_m = [choice_m choice]; 
+    dec_tr = [dec_tr; errme_TR]; 
+    dec_sen = [dec_sen; errme_sensory]; 
+    dec_mne = [dec_mne; errme_memory]; 
     
     
     
@@ -212,15 +190,10 @@ for isub = runSub
     temp_TR_mean_e(:,isub) = 45-circ_mean(abs(errme_TR(timing==1,:))*2*pi/180)*180/pi/2;
     temp_TR_mean_l(:,isub) = 45-circ_mean(abs(errme_TR(timing==2,:))*2*pi/180)*180/pi/2;
     
-    temp_choice_TR_e(:,1,isub) = circ_mean((errme_TR(timing==1 & choice==1,:))*2*pi/180)*180/pi/2;
-    temp_choice_TR_e(:,2,isub) = circ_mean((errme_TR(timing==1 & choice==2,:))*2*pi/180)*180/pi/2;
-    temp_choice_TR_l(:,1,isub) = circ_mean((errme_TR(timing==2 & choice==1,:))*2*pi/180)*180/pi/2;
-    temp_choice_TR_l(:,2,isub) = circ_mean((errme_TR(timing==2 & choice==2,:))*2*pi/180)*180/pi/2;
-    
-    tempx_choice_TR_e(:,1,isub) = nanmean((errme_TR(timing==1 & choice==1,:))*2*pi/180)*180/pi/2;
-    tempx_choice_TR_e(:,2,isub) = nanmean((errme_TR(timing==1 & choice==2,:))*2*pi/180)*180/pi/2;
-    tempx_choice_TR_l(:,1,isub) = nanmean((errme_TR(timing==2 & choice==1,:))*2*pi/180)*180/pi/2;
-    tempx_choice_TR_l(:,2,isub) = nanmean((errme_TR(timing==2 & choice==2,:))*2*pi/180)*180/pi/2;
+    temp_choice_TR_e(:,1,isub) = circ_mean((errme_TR(timing==1 & choice==1 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_TR_e(:,2,isub) = circ_mean((errme_TR(timing==1 & choice==2 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_TR_l(:,1,isub) = circ_mean((errme_TR(timing==2 & choice==1 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
+    temp_choice_TR_l(:,2,isub) = circ_mean((errme_TR(timing==2 & choice==2 & abs(ref)<5,:))*2*pi/180)*180/pi/2;
     
     errme_TR = nan(length(Decoded_result{3}.est(1,:)), nTR); 
     for iTRx = 1:nTR
@@ -233,9 +206,591 @@ for isub = runSub
         avgPred_l(iTRx,isub) = (sum(errme(timing==2)>0 & choice(timing==2)==1) + sum(errme(timing==2)<0 & choice(timing==2)==2))/length(choice(timing==2)); 
     end
     
+    
+    dec_dv = nan(length(Decoded_result{3}.est(1,:)), nTR); 
+    for iTRx = 1:nTR
+        tempse = circ_mean([Decoded_result{3}.est(iTRx,:); Decoded_result{4}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempse(tempse<0) = tempse(tempse<0)+180; 
+        
+        tempx = circ_mean([Decoded_result{9}.est(iTRx,:); Decoded_result{10}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        
+        errme = tempx - tempse; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180;  
+        dec_dv(timing==1,iTRx) = errme(timing==1); 
+
+        tempx = circ_mean([Decoded_result{6}.est(iTRx,:); Decoded_result{7}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        
+        errme = tempx - tempse; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180;  
+        dec_dv(timing==2,iTRx) = errme(timing==2); 
+        avgPred_Near_e(iTRx,isub) = (sum(dec_dv(timing==1)>0 & choice(timing==1)==1 & abs(ref)<5) + sum(dec_dv(timing==1)<0 & choice(timing==1)==2 & abs(ref)<5))/length(choice(timing==1 & abs(ref)<5)); 
+        avgPred_Near_l(iTRx,isub) = (sum(dec_dv(timing==2)>0 & choice(timing==2)==1 & abs(ref)<5) + sum(dec_dv(timing==2)<0 & choice(timing==2)==2 & abs(ref)<5))/length(choice(timing==2 & abs(ref)<5)); 
+        avgPred_All_e(iTRx,isub) = (sum(dec_dv(timing==1)>0 & choice(timing==1)==1 & abs(ref)<5) + sum(dec_dv(timing==1)<0 & choice(timing==1)==2 & abs(ref)<5))/length(choice(timing==1 & abs(ref)<5)); 
+        avgPred_All_l(iTRx,isub) = (sum(dec_dv(timing==2)>0 & choice(timing==2)==1 & abs(ref)<5) + sum(dec_dv(timing==2)<0 & choice(timing==2)==2 & abs(ref)<5))/length(choice(timing==2 & abs(ref)<5)); 
+    
+    end
+    
     clear Decoded_result
 end
 
+asdf
+%% Figure drawing
+
+
+% xvec = (1:nTR) * 2 -1; 
+xvec = (1:nTR); 
+
+set(figure(1),'position',[1 779 397 566]); clf; 
+SP = subplot(3,2,1); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+ymean = circ_mean(squeeze(temp_choice_TR_e(:,1,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_TR_e(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
+    
+ymean = circ_mean(squeeze(temp_choice_TR_e(:,2,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_TR_e(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd +flip(ymean+ystd)] ; 
+patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+% ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,2); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+ymean = circ_mean(squeeze(temp_choice_TR_l(:,1,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_TR_l(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
+    
+ymean = circ_mean(squeeze(temp_choice_TR_l(:,2,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_TR_l(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd +flip(ymean+ystd)] ; 
+patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+% ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+
+
+% Sensory 
+SP = subplot(3,2,3); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+ymean = circ_mean(squeeze(temp_choice_sen_e(:,1,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_sen_e(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
+    
+ymean = circ_mean(squeeze(temp_choice_sen_e(:,2,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_sen_e(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd +flip(ymean+ystd)] ; 
+patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+% ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,4); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+ymean = circ_mean(squeeze(temp_choice_sen_l(:,1,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_sen_l(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
+    
+ymean = circ_mean(squeeze(temp_choice_sen_l(:,2,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_sen_l(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd +flip(ymean+ystd)] ; 
+patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+% ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+
+
+
+% Mnemonic 
+SP = subplot(3,2,5); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+ymean = circ_mean(squeeze(temp_choice_mne_e(:,1,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_mne_e(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
+    
+ymean = circ_mean(squeeze(temp_choice_mne_e(:,2,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_mne_e(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd +flip(ymean+ystd)] ; 
+patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+% ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,6); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+ymean = circ_mean(squeeze(temp_choice_mne_l(:,1,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_mne_l(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
+    
+ymean = circ_mean(squeeze(temp_choice_mne_l(:,2,:))'*2*pi/180)*180/pi/2; 
+ystd = circ_std(squeeze(temp_choice_mne_l(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd +flip(ymean+ystd)] ; 
+patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+% ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+
+
+
+
+
+
+set(figure(2),'position',[1 779 397 566]); clf; 
+SP = subplot(3,2,1); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+xx = squeeze(temp_choice_TR_e(:,1,:)-temp_choice_TR_e(:,2,:)); 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180;
+
+ymean = circ_mean(xx'*2*pi/180)*180/pi/2; 
+ystd = circ_std(xx'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'k','facealpha',0.5,'edgecolor','none'); 
+    
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('\Delta decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,2); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+xx = squeeze(temp_choice_TR_l(:,1,:)-temp_choice_TR_l(:,2,:)); 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180;
+
+ymean = circ_mean(xx'*2*pi/180)*180/pi/2; 
+ystd = circ_std(xx'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'k','facealpha',0.5,'edgecolor','none'); 
+    
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+title('Late Dm'); 
+
+SP = subplot(3,2,3); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+xx = squeeze(temp_choice_sen_e(:,1,:)-temp_choice_sen_e(:,2,:)); 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180;
+
+ymean = circ_mean(xx'*2*pi/180)*180/pi/2; 
+ystd = circ_std(xx'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'k','facealpha',0.5,'edgecolor','none'); 
+    
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('\Delta decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,4); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+xx = squeeze(temp_choice_sen_l(:,1,:)-temp_choice_sen_l(:,2,:)); 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180;
+
+ymean = circ_mean(xx'*2*pi/180)*180/pi/2; 
+ystd = circ_std(xx'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'k','facealpha',0.5,'edgecolor','none'); 
+    
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+title('Late Dm'); 
+
+
+SP = subplot(3,2,5); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+xx = squeeze(temp_choice_mne_e(:,1,:)-temp_choice_mne_e(:,2,:)); 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180;
+
+ymean = circ_mean(xx'*2*pi/180)*180/pi/2; 
+ystd = circ_std(xx'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'k','facealpha',0.5,'edgecolor','none'); 
+    
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('\Delta decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,6); cla; hold on; 
+xval = [xvec flip(xvec)]; 
+xx = squeeze(temp_choice_mne_l(:,1,:)-temp_choice_mne_l(:,2,:)); 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180;
+
+ymean = circ_mean(xx'*2*pi/180)*180/pi/2; 
+ystd = circ_std(xx'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+yval = [ymean-ystd flip(ymean+ystd)] ; 
+patch(xval, yval, 'k','facealpha',0.5,'edgecolor','none'); 
+    
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+title('Late Dm'); 
+
+
+
+%% Merged
+
+set(figure(3),'position',[1 779 397 566]); clf; 
+
+SP = subplot(3,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_tr(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_tr(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_tr(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_tr(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+
+SP = subplot(3,2,3); cla; hold on; 
+plot(rangeu, circ_mean(dec_sen(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_sen(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,4); cla; hold on; 
+plot(rangeu, circ_mean(dec_sen(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_sen(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+
+SP = subplot(3,2,5); cla; hold on; 
+plot(rangeu, circ_mean(dec_mne(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_mne(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,6); cla; hold on; 
+plot(rangeu, circ_mean(dec_mne(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_mne(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+ylim([-20 20]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+
+
+
+
+
+set(figure(4),'position',[1 779 397 566]); clf; 
+
+SP = subplot(3,2,1); cla; hold on; 
+xx = circ_mean(dec_tr(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2 - ...
+    circ_mean(dec_tr(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2; 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180; 
+plot(rangeu, xx, 'r.-','color','k','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,2); cla; hold on; 
+xx = circ_mean(dec_tr(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2 - ...
+    circ_mean(dec_tr(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2; 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180; 
+plot(rangeu, xx, 'r.-','color','k','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+
+
+SP = subplot(3,2,3); cla; hold on; 
+xx = circ_mean(dec_sen(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2 - ...
+    circ_mean(dec_sen(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2; 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180; 
+plot(rangeu, xx, 'r.-','color','k','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,4); cla; hold on; 
+xx = circ_mean(dec_sen(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2 - ...
+    circ_mean(dec_sen(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2; 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180; 
+plot(rangeu, xx, 'r.-','color','k','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+
+
+SP = subplot(3,2,5); cla; hold on; 
+xx = circ_mean(dec_mne(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2 - ...
+    circ_mean(dec_mne(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2; 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180; 
+plot(rangeu, xx, 'r.-','color','k','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+ylabel('Decoded bias (deg)'); 
+title('Early Dm'); 
+
+SP = subplot(3,2,6); cla; hold on; 
+xx = circ_mean(dec_mne(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2 - ...
+    circ_mean(dec_mne(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2; 
+xx(xx>90) = xx(xx>90) -180; 
+xx(xx<-90) = xx(xx<-90) +180; 
+plot(rangeu, xx, 'r.-','color','k','markersize',13,'linewidth',2);
+plot([0 15],[0 0],'k--','linewidth',1.5); 
+title('Late Dm'); 
+ylim([-10 30]); 
+xlim([3 15]); 
+xlabel('Time (TR)'); 
+
+%% 
+% Reference conditions
+refcond = [19 47 120; 147 189 234; 190 190 190; 238 139 129; 120 14 32]/255; 
+
+rangeu = 1:(nTR); 
+
+% Sensory code
+set(figure(101),'position',[1 560 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+for ir = 1:5
+    plot(rangeu, circ_mean(dec_sen(timing_m==1 & ref_m ==refs(ir),rangeu)*2*pi/180)*180/pi/2, 'r.-','color',refcond(ir,:),'markersize',13,'linewidth',2);
+    plot([0 14],[0 0]+refs(ir),'k-','color',refcond(ir,:)); 
+end
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]);
+SP = subplot(1,2,2); cla; hold on; 
+for ir = 1:5
+    plot(rangeu, circ_mean(dec_sen(timing_m==2 & ref_m ==refs(ir),rangeu)*2*pi/180)*180/pi/2, 'r.-','color',refcond(ir,:),'markersize',13,'linewidth',2);
+    plot([0 14],[0 0]+refs(ir),'k-','color',refcond(ir,:)); 
+end
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+% Mnemonic code
+set(figure(102),'position',[1 560 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+for ir = 1:5
+    plot(rangeu, circ_mean(dec_mne(timing_m==1 & ref_m ==refs(ir),rangeu)*2*pi/180)*180/pi/2, 'r.-','color',refcond(ir,:),'markersize',13,'linewidth',2);
+    plot([0 14],[0 0]+refs(ir),'k-','color',refcond(ir,:)); 
+end
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]);
+SP = subplot(1,2,2); cla; hold on; 
+for ir = 1:5
+    plot(rangeu, circ_mean(dec_mne(timing_m==2 & ref_m ==refs(ir),rangeu)*2*pi/180)*180/pi/2, 'r.-','color',refcond(ir,:),'markersize',13,'linewidth',2);
+    plot([0 14],[0 0]+refs(ir),'k-','color',refcond(ir,:)); 
+end
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+
+% Mixed code
+set(figure(103),'position',[1 560 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+for ir = 1:5
+    plot(rangeu, circ_mean(dec_tr(timing_m==1 & ref_m ==refs(ir),rangeu)*2*pi/180)*180/pi/2, 'r.-','color',refcond(ir,:),'markersize',13,'linewidth',2);
+    plot([0 14],[0 0]+refs(ir),'k-','color',refcond(ir,:)); 
+end
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]);
+SP = subplot(1,2,2); cla; hold on; 
+for ir = 1:5
+    plot(rangeu, circ_mean(dec_tr(timing_m==2 & ref_m ==refs(ir),rangeu)*2*pi/180)*180/pi/2, 'r.-','color',refcond(ir,:),'markersize',13,'linewidth',2);
+    plot([0 14],[0 0]+refs(ir),'k-','color',refcond(ir,:)); 
+end
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+
+%% Choice
+% Sensory code
+set(figure(105),'position',[1 560 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_sen(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_sen(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]);
+SP = subplot(1,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_sen(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_sen(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+
+set(figure(106),'position',[1 241 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_mne(timing_m==1 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_mne(timing_m==1 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]); 
+SP = subplot(1,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_mne(timing_m==2 & choice_m ==1 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_mne(timing_m==2 & choice_m ==2 & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+set(figure(107),'position',[1 8 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_tr(timing_m==1 & choice_m ==1  & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_tr(timing_m==1 & choice_m ==2  & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]); 
+
+SP = subplot(1,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_tr(timing_m==2 & choice_m ==1  & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_tr(timing_m==2 & choice_m ==2  & abs(ref_m)<5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+
+
+
+
+
+
+
+set(figure(105),'position',[1 560 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_sen(timing_m==1 & choice_m ==1 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_sen(timing_m==1 & choice_m ==2 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]);
+SP = subplot(1,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_sen(timing_m==2 & choice_m ==1 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_sen(timing_m==2 & choice_m ==2 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+
+set(figure(106),'position',[1 241 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_mne(timing_m==1 & choice_m ==1 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_mne(timing_m==1 & choice_m ==2 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]); 
+SP = subplot(1,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_mne(timing_m==2 & choice_m ==1 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_mne(timing_m==2 & choice_m ==2 & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
+
+set(figure(107),'position',[1 8 742 245]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(rangeu, circ_mean(dec_tr(timing_m==1 & choice_m ==1  & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_tr(timing_m==1 & choice_m ==2  & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Early Dm'); 
+ylim([-30 30]); 
+
+SP = subplot(1,2,2); cla; hold on; 
+plot(rangeu, circ_mean(dec_tr(timing_m==2 & choice_m ==1  & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','r','markersize',13,'linewidth',2);
+plot(rangeu, circ_mean(dec_tr(timing_m==2 & choice_m ==2  & abs(ref_m)>5,rangeu)*2*pi/180)*180/pi/2, 'r.-','color','b','markersize',13,'linewidth',2);
+plot([0 14],[0 0],'k-','color',refcond(3,:)); 
+xlabel('Time (TR)'); ylabel('Decoded bias'); 
+title('Late Dm'); 
+ylim([-30 30]);
 % figure(50); clf; 
 % plot(double(stimulus), Decoded_result{13}.est(13,:),'ko'); 
 % 
@@ -254,7 +809,9 @@ end
 % xlim([0, length(stimulus)]); 
 
 %% 
-rangeu = 4:(nTR-1); 
+
+asdf
+
 
 figure(24); clf; 
 SP = subplot(3,2,1); cla; hold on; 
