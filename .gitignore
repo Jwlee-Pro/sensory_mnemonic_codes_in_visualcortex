@@ -2,6 +2,7 @@
 data/
 models/
 share/
+/data/
 
 # Cache
 __pycache__/
