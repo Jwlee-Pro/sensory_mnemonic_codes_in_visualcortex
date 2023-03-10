@@ -319,21 +319,45 @@ for iTR = 1:nTR
     title(['TR=' num2str(iTR)]); 
 end
 
+xx_e = nan(5,nTR); 
+xx_l = nan(5,nTR); 
+xx_near_e = nan(3,nTR); 
+xx_near_l = nan(3,nTR);
+xx_far_e = nan(2,nTR); 
+xx_far_l = nan(2,nTR); 
+for iTR = 1:nTR
+    xx_e(:,iTR) = circ_mean(squeeze(std_ref_mne_e(iTR,:,:))'*2*pi/180)*180/pi/2; 
+    xx_l(:,iTR) = circ_mean(squeeze(std_ref_mne_l(iTR,:,:))'*2*pi/180)*180/pi/2; 
+    xx_near_e(:,iTR) = circ_mean(squeeze(std_ref_mne_e(iTR,2:4,:))'*2*pi/180)*180/pi/2; 
+    xx_near_l(:,iTR) = circ_mean(squeeze(std_ref_mne_l(iTR,2:4,:))'*2*pi/180)*180/pi/2; 
+    xx_far_e(:,iTR) = circ_mean(squeeze(std_ref_mne_e(iTR,[1, 5],:))'*2*pi/180)*180/pi/2; 
+    xx_far_l(:,iTR) = circ_mean(squeeze(std_ref_mne_l(iTR,[1, 5],:))'*2*pi/180)*180/pi/2; 
+end
 
-
-xval = [xvec flip(xvec)]; 
-ymean = circ_mean(squeeze(temp_choice_TR_e(:,1,:))'*2*pi/180)*180/pi/2; 
-ystd = circ_std(squeeze(temp_choice_TR_e(:,1,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
-yval = [ymean-ystd flip(ymean+ystd)] ; 
-patch(xval, yval, 'r','facealpha',0.5,'edgecolor','none'); 
-    
-ymean = circ_mean(squeeze(temp_choice_TR_e(:,2,:))'*2*pi/180)*180/pi/2; 
-ystd = circ_std(squeeze(temp_choice_TR_e(:,2,:))'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
-yval = [ymean-ystd +flip(ymean+ystd)] ; 
-patch(xval, yval, 'b','facealpha',0.5,'edgecolor','none'); 
-plot([0 15],[0 0],'k--','linewidth',1.5); 
-% ylim([-20 20]); 
-xlim([3 15]); 
+set(figure(4),'position',[1 598 268 207]); clf; 
+plot(nanmean(xx_e),'bo-'); hold on; 
+plot(nanmean(xx_l),'ro-');
+legend('Early', 'Late'); 
+ylabel('Baseline STD'); 
 xlabel('Time (TR)'); 
-ylabel('Decoded bias (deg)'); 
-title('Early Dm'); 
+
+set(figure(5),'position',[1 598 268 207]); clf; 
+% plot(nanmean(xx_near_e)-nanmean(xx_far_e),'bo-'); hold on; 
+% plot(nanmean(xx_near_l)-nanmean(xx_far_l),'ro-');
+% plot([0 14],[0 0],'k--'); 
+plot(nanmean(xx_near_e),'bo-'); hold on; 
+plot(nanmean(xx_far_e),'bo--'); 
+plot(nanmean(xx_near_l),'ro-');
+plot(nanmean(xx_far_l),'ro--');
+% legend('Early', 'Late'); 
+ylabel('Near, Far STD'); 
+
+ylabel('Near - Far STD'); 
+xlabel('Time (TR)'); 
+
+
+
+
+
+
+
