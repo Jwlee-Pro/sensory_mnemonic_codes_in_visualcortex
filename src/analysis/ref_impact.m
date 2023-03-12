@@ -463,15 +463,25 @@ for isub = runSub
     errme_memory_corr = nan(size(errme_memory)); 
     for iTR = 1:nTR
         for ir = 1:length(refs)
-            temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1,iTR))*2*pi/180)*180/pi/2; 
+            temp = errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) - circ_mean((errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1,iTR))*2*pi/180)*180/pi/2; 
             temp(temp>90) = temp(temp>90) -180; 
             temp(temp<-90) = temp(temp<-90) +180; 
             errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) = temp ; 
 
-            temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2,iTR))*2*pi/180)*180/pi/2; 
+            temp = errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) - circ_mean((errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2,iTR))*2*pi/180)*180/pi/2; 
             temp(temp>90) = temp(temp>90) -180; 
             temp(temp<-90) = temp(temp<-90) +180; 
             errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) = temp ; 
+            
+%             temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1,iTR))*2*pi/180)*180/pi/2; 
+%             temp(temp>90) = temp(temp>90) -180; 
+%             temp(temp<-90) = temp(temp<-90) +180; 
+%             errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) = temp ; 
+% 
+%             temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2,iTR))*2*pi/180)*180/pi/2; 
+%             temp(temp>90) = temp(temp>90) -180; 
+%             temp(temp<-90) = temp(temp<-90) +180; 
+%             errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) = temp ; 
         end
     end
     
