@@ -358,6 +358,198 @@ xlabel('Time (TR)');
 
 
 
+%% Impact of trial-selection 
+std_nf = nan(2,length(sub_list)); 
+err_crit = 20; 
+
+for isub = runSub
+    load(['/Volumes/ROOT/CSNL_temp/JWL/sensory_mnemonic_codes_in_visualcortex/data/decoded_estimated/VC_sub-' sub_list(isub,:) '_dec.mat'])
+    [nTestTR, nTrials] = size(Decoded_result{1}.est); 
+    
+    % Behavioral errors
+    errme = response - stimulus; 
+    errme(errme>90) = errme(errme>90) -180; 
+    errme(errme<-90) = errme(errme<-90) +180; 
+    
+    % Correct for the reference-dependent bias
+    errme_corr = nan(size(errme)); 
+    for ir = 1:length(refs)
+        temp = errme(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit) - circ_mean((errme(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit))'*2*pi/180)*180/pi/2; 
+        temp(temp>90) = temp(temp>90) -180; 
+        temp(temp<-90) = temp(temp<-90) +180;
+        errme_corr(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit) = temp ; 
+    end
+    
+    % Near vs. Far 
+    vals = errme_corr(abs(ref)<5  & ~isnan(errme) & abs(errme)<err_crit); 
+    std_nf(1,isub) = circ_std(vals'*2*pi/180)*180/pi/2; 
+    vals = errme_corr(abs(ref)>5  & ~isnan(errme) & abs(errme)<err_crit); 
+    std_nf(2,isub) = circ_std(vals'*2*pi/180)*180/pi/2; 
+    
+    nTrials = sum(~isnan(errme_corr))/length(errme_corr); 
+end
+
+
+set(figure(10),'position',[1 587 230 218]); clf; 
+errorbar(1:2, nanmean(std_nf'), nanstd(std_nf')/sqrt(length(sub_list)-1)); 
+
+[h,p] = ttest(std_nf(1,:), std_nf(2,:)); 
+
+ranges = [5, 11]; 
+set(figure(11),'position',[1 587 230 218]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+plot(std_nf(1,:), std_nf(2,:),'ko','markerfacecolor','w'); 
+
+plot(ranges,ranges,'k--'); 
+xlim(ranges) ; ylim(ranges) ;
+xlabel('STD Near'); ylabel('STD Far'); 
+title(['p = ' num2str(p)]); 
+
+nanmean(nTrials)
+
+
+%% Trial-sorting 
+std_fmri_nf_e = nan(2,nTR,length(sub_list)); 
+std_fmri_nf_l = nan(2,nTR,length(sub_list)); 
+
+for isub = runSub
+    load(['/Volumes/ROOT/CSNL_temp/JWL/sensory_mnemonic_codes_in_visualcortex/data/decoded_estimated/VC_sub-' sub_list(isub,:) '_dec.mat'])
+    [nTestTR, nTrials] = size(Decoded_result{1}.est); 
+    
+    % Behavioral errors
+    errme = response - stimulus; 
+    errme(errme>90) = errme(errme>90) -180; 
+    errme(errme<-90) = errme(errme<-90) +180; 
+    
+    % Correct for the reference-dependent bias
+    errme_corr = nan(size(errme)); 
+    for ir = 1:length(refs)
+        temp = errme(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit) - circ_mean((errme(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit))'*2*pi/180)*180/pi/2; 
+        temp(temp>90) = temp(temp>90) -180; 
+        temp(temp<-90) = temp(temp<-90) +180; 
+        errme_corr(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit) = temp ; 
+    end
+    errme_behav = errme; 
+    
+    % Sensory decoded
+    errme_sensory = nan(length(Decoded_result{3}.est(1,:)), nTR); 
+    for iTRx = 1:nTR
+        tempx = circ_mean([Decoded_result{3}.est(iTRx,:); Decoded_result{4}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        errme = tempx - stimulus; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180; 
+        errme_sensory(:,iTRx) = errme; 
+    end
+     % Memory decoded
+    errme_memory = nan(length(Decoded_result{3}.est(1,:)), nTR); 
+    for iTRx = 1:nTR
+        tempx = circ_mean([Decoded_result{9}.est(iTRx,:); Decoded_result{10}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        errme = tempx - stimulus; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180;  
+        errme_memory(timing==1,iTRx) = errme(timing==1); 
+        
+        tempx = circ_mean([Decoded_result{6}.est(iTRx,:); Decoded_result{7}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        errme = tempx - stimulus; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180;  
+        errme_memory(timing==2,iTRx) = errme(timing==2); 
+    end
+    
+    % Correct for the reference-dependent bias
+    errme_memory_corr = nan(size(errme_memory)); 
+    for iTR = 1:nTR
+        for ir = 1:length(refs)
+            temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1,iTR))*2*pi/180)*180/pi/2; 
+            temp(temp>90) = temp(temp>90) -180; 
+            temp(temp<-90) = temp(temp<-90) +180; 
+            errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) = temp ; 
+
+            temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2,iTR))*2*pi/180)*180/pi/2; 
+            temp(temp>90) = temp(temp>90) -180; 
+            temp(temp<-90) = temp(temp<-90) +180; 
+            errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) = temp ; 
+        end
+    end
+    
+    % Near vs. Far 
+    for iTR = 1:nTR
+        vals = errme_memory_corr(abs(ref)<5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR); 
+        std_fmri_nf_e(1,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+        vals = errme_memory_corr(abs(ref)>5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR); 
+        std_fmri_nf_e(2,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+        
+        vals = errme_memory_corr(abs(ref)<5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR); 
+        std_fmri_nf_l(1,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+        vals = errme_memory_corr(abs(ref)>5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR); 
+        std_fmri_nf_l(2,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+    end
+    
+    
+    clear Decoded_result
+end
+
+ranges = [20, 40]; 
+set(figure(12),'position',[1 491 1426 387]); clf; 
+for iTR = 1:nTR
+    [h,p] = ttest(squeeze(std_fmri_nf_e(1,iTR,:)), squeeze(std_fmri_nf_e(2,iTR,:))); 
+
+    SP = subplot(2,7,iTR); cla; hold on; 
+    plot(squeeze(std_fmri_nf_e(1,iTR,:)), squeeze(std_fmri_nf_e(2,iTR,:)),'ko','markersize',6); 
+
+    plot(ranges,ranges,'k--'); 
+    xlim(ranges) ; ylim(ranges) ;
+    xlabel('STD Near'); ylabel('STD Far'); 
+    if nanmean(squeeze(std_fmri_nf_e(1,iTR,:)))-nanmean(squeeze(std_fmri_nf_e(2,iTR,:)))>0
+        title(['Near > Far, p = ' num2str(p)]); 
+    else
+        title(['Near < Far, p = ' num2str(p)]); 
+    end
+end
+
+
+ranges = [20, 40]; 
+set(figure(13),'position',[1 1 1426 387]); clf; 
+for iTR = 1:nTR
+    [h,p] = ttest(squeeze(std_fmri_nf_l(1,iTR,:)), squeeze(std_fmri_nf_l(2,iTR,:))); 
+
+    SP = subplot(2,7,iTR); cla; hold on; 
+    plot(squeeze(std_fmri_nf_l(1,iTR,:)), squeeze(std_fmri_nf_l(2,iTR,:)),'ko','markersize',6); 
+
+    plot(ranges,ranges,'k--'); 
+    xlim(ranges) ; ylim(ranges) ;
+    xlabel('STD Near'); ylabel('STD Far'); 
+    if nanmean(squeeze(std_fmri_nf_l(1,iTR,:)))-nanmean(squeeze(std_fmri_nf_l(2,iTR,:)))>0
+        title(['Near > Far, p = ' num2str(p)]); 
+    else
+        title(['Near < Far, p = ' num2str(p)]); 
+    end
+end
+
+for iTR = 1:nTR
+    [h,p,ci,stats] = ttest(squeeze(std_fmri_nf_e(1,iTR,:)), squeeze(std_fmri_nf_e(2,iTR,:))); 
+    t_stats(iTR) = stats.tstat; 
+    p_value(iTR) = p; 
+end
+
+set(figure(14),'position',[14 602 310 203]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+plot(t_stats,'ko-');
+for iTR = 1:nTR
+    if p_value(iTR) < 0.05
+        plot(iTR, t_stats(iTR),'ko','markerfacecolor','k'); 
+    else
+        plot(iTR, t_stats(iTR),'ko','markerfacecolor','w'); 
+    end
+end
+plot([0 14],[0 0], 'k--'); 
+xlim([0,14]); ylim([-2 4]); 
+xlabel('Time (TR)'); 
+ylabel('t value (near - far std)'); 
+
 
 
 
