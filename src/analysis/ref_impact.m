@@ -405,10 +405,10 @@ xlim(ranges) ; ylim(ranges) ;
 xlabel('STD Near'); ylabel('STD Far'); 
 title(['p = ' num2str(p)]); 
 
-nanmean(nTrials)
 
 
-%% Trial-sorting 
+
+%% Trial-filtering 
 std_fmri_nf_e = nan(2,nTR,length(sub_list)); 
 std_fmri_nf_l = nan(2,nTR,length(sub_list)); 
 
@@ -559,6 +559,144 @@ plot([0 14],[0 0], 'k--');
 xlim([0,14]); ylim([-2 4]); 
 xlabel('Time (TR)'); 
 ylabel('t value (near - far std)'); 
+
+
+
+
+
+%% Orientation-specific correction
+err_crit = 20; 
+
+for isub = runSub
+    load(['/Volumes/ROOT/CSNL_temp/JWL/sensory_mnemonic_codes_in_visualcortex/data/decoded_estimated/VC_sub-' sub_list(isub,:) '_dec.mat'])
+    [nTestTR, nTrials] = size(Decoded_result{1}.est); 
+    
+    % Behavioral errors
+    errme = response - stimulus; 
+    errme(errme>90) = errme(errme>90) -180; 
+    errme(errme<-90) = errme(errme<-90) +180; 
+    
+    % Correct for orientation-dependent bias
+    errme_ori = nan(size(errme)); 
+    for istim = 1:length(stimcond)
+        temp = errme(stimulus==stimcond(istim) & ~isnan(errme) & abs(errme)<err_crit) - circ_mean((errme(stimulus==stimcond(istim) & ~isnan(errme) & abs(errme)<err_crit))'*2*pi/180)*180/pi/2; 
+        temp(temp>90) = temp(temp>90) -180; 
+        temp(temp<-90) = temp(temp<-90) +180; 
+        errme_ori(stimulus==stimcond(istim) & ~isnan(errme) & abs(errme)<err_crit) = temp ; 
+    end
+    errme = errme_ori; 
+    
+    % Correct for the reference-dependent bias
+    errme_corr = nan(size(errme)); 
+    for ir = 1:length(refs)
+        temp = errme(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit) - circ_mean((errme(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit))'*2*pi/180)*180/pi/2; 
+        temp(temp>90) = temp(temp>90) -180; 
+        temp(temp<-90) = temp(temp<-90) +180; 
+        errme_corr(ref==refs(ir) & ~isnan(errme) & abs(errme)<err_crit) = temp ; 
+    end
+    errme_behav = errme_corr; 
+    errme = errme_corr;
+    
+
+    for ir = 1:length(refs)
+        Behav_mean_ref(ir,isub) = circ_mean((errme_ori(ref==refs(ir) & ref==refs(ir)  & ~isnan(errme_ori) & abs(errme_ori)<err_crit ))'*2*pi/180)*180/pi/2;
+        Behav_std_ref(ir,isub) = circ_std((errme_ori(ref==refs(ir) & ref==refs(ir)  & ~isnan(errme_ori) & abs(errme_ori)<err_crit))'*2*pi/180)*180/pi/2;
+    end
+    
+    
+    % Sensory decoded
+    errme_sensory = nan(length(Decoded_result{3}.est(1,:)), nTR); 
+    for iTRx = 1:nTR
+        tempx = circ_mean([Decoded_result{3}.est(iTRx,:); Decoded_result{4}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        errme = tempx - stimulus; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180; 
+        errme_sensory(:,iTRx) = errme; 
+    end
+     % Memory decoded
+    errme_memory = nan(length(Decoded_result{3}.est(1,:)), nTR); 
+    for iTRx = 1:nTR
+        tempx = circ_mean([Decoded_result{9}.est(iTRx,:); Decoded_result{10}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        errme = tempx - stimulus; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180;  
+        errme_memory(timing==1,iTRx) = errme(timing==1); 
+        
+        tempx = circ_mean([Decoded_result{6}.est(iTRx,:); Decoded_result{7}.est(iTRx,:)]*2*pi/180)*180/pi/2;
+        tempx(tempx<0) = tempx(tempx<0)+180; 
+        errme = tempx - stimulus; 
+        errme(errme>90) = errme(errme>90) -180; 
+        errme(errme<-90) = errme(errme<-90) +180;  
+        errme_memory(timing==2,iTRx) = errme(timing==2); 
+    end
+    
+    % Correct for the reference-dependent bias
+    errme_memory_corr = nan(size(errme_memory)); 
+    for iTR = 1:nTR
+        for ir = 1:length(refs)
+%             temp = errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) - circ_mean((errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1,iTR))*2*pi/180)*180/pi/2; 
+%             temp(temp>90) = temp(temp>90) -180; 
+%             temp(temp<-90) = temp(temp<-90) +180; 
+%             errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) = temp ; 
+% 
+%             temp = errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) - circ_mean((errme_sensory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2,iTR))*2*pi/180)*180/pi/2; 
+%             temp(temp>90) = temp(temp>90) -180; 
+%             temp(temp<-90) = temp(temp<-90) +180; 
+%             errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) = temp ; 
+            
+            temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1,iTR))*2*pi/180)*180/pi/2; 
+            temp(temp>90) = temp(temp>90) -180; 
+            temp(temp<-90) = temp(temp<-90) +180; 
+            errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR) = temp ; 
+
+            temp = errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) - circ_mean((errme_memory(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2,iTR))*2*pi/180)*180/pi/2; 
+            temp(temp>90) = temp(temp>90) -180; 
+            temp(temp<-90) = temp(temp<-90) +180; 
+            errme_memory_corr(ref==refs(ir) & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR) = temp ; 
+        end
+    end
+    
+    % Near vs. Far 
+    for iTR = 1:nTR
+        vals = errme_memory_corr(abs(ref)<5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR); 
+        std_fmri_nf_e(1,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+        vals = errme_memory_corr(abs(ref)>5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==1, iTR); 
+        std_fmri_nf_e(2,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+        
+        vals = errme_memory_corr(abs(ref)<5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR); 
+        std_fmri_nf_l(1,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+        vals = errme_memory_corr(abs(ref)>5  & ~isnan(errme_behav) & abs(errme_behav)<err_crit & timing==2, iTR); 
+        std_fmri_nf_l(2,iTR,isub) = circ_std(vals*2*pi/180)*180/pi/2; 
+    end
+    
+    
+    clear Decoded_result
+end
+
+
+set(figure(101),'position',[1 1125 288 220]); clf; 
+
+SP = subplot(1,1,1); cla; hold on; 
+errorbar(refs, circ_mean(Behav_std_ref'*2*pi/180)*180/pi/2, circ_std(Behav_std_ref'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1), 'ko','capsize',0,'markerfacecolor','w','color',nearfar_color(1,:),'linewidth',1)
+plot(refs, circ_mean(Behav_std_ref'*2*pi/180)*180/pi/2, 'ko','linewidth',1.3,'markerfacecolor',nearfar_color(1,:),'color',nearfar_color(1,:)); 
+
+errorbar(refs(2:4), circ_mean(Behav_std_ref(2:4,:)'*2*pi/180)*180/pi/2, circ_std(Behav_std_ref(2:4,:)'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1), 'ko','capsize',0,'markerfacecolor','w','color',nearfar_color(2,:),'linewidth',1)
+plot(refs(2:4), circ_mean(Behav_std_ref(2:4,:)'*2*pi/180)*180/pi/2, 'ko','linewidth',1.3,'markerfacecolor',nearfar_color(2,:),'color',nearfar_color(2,:)); 
+
+xlabel('Reference (deg)'); 
+ylabel('STD (deg)'); 
+
+
+
+
+
+
+
+
+
+
 
 
 
