@@ -22,7 +22,7 @@ nTR = 14;
 refs = [-21, -4, 0, 4, 21]; 
 stimcond = 0:7.5:172.5; 
 
-binCenter = -90:5:85 ;
+binCenter = -90:5:85 ; 
 nBin = length(binCenter); 
 
 matSub = {}; 
