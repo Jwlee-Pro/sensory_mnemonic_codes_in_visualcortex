@@ -1,8 +1,7 @@
 # Data and checkpoints
-data/
+/data
 models/
 share/
-/data/
 
 # Cache
 __pycache__/
