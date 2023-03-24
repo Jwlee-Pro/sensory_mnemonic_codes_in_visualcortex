@@ -2,7 +2,7 @@ clear all; close all; clc;
 
 % Load sub/roi-list 
 load('/Volumes/ROOT/CSNL_temp/JWL/Analysis_2021DecSummary/sub_list.mat')
-addpath('/Users/joonwon/Dropbox/0_PRESENTATION_FILES_JWL2020/BRL_daily/20211007_/WorkingMemoryDynamics-master/CircStat2012a')
+addpath('/Volumes/ROOT/CSNL_temp/JWL/sensory_mnemonic_codes_in_visualcortex/src/packages/CircStat2012a')
 addpath('/Volumes/ROOT/CSNL_temp/JWL/Analysis_2021DecSummary/B1_IEM_revisit/customcolormap')
 
 nTR = 14; 
