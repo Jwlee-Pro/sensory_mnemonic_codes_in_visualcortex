@@ -87,17 +87,30 @@ for isub = runSub
     errsize_l(:,isub) = 45-circ_mean(abs(errme_fmri(:,timing==2))'*2*pi/180)*180/pi/2; 
 end
 
+J_el = [102, 126, 182; 182, 126, 102]/255; 
 
 % Check fidelity
 figure(1); clf; 
 SP = subplot(1,1,1); cla; hold on; 
-% plot(45-circ_mean(abs(dec_mne(:,timing_m==1))'*2*pi/180)*180/pi/2, 'bo-','markerfacecolor','w'); 
-% plot(45-circ_mean(abs(dec_mne(:,timing_m==2))'*2*pi/180)*180/pi/2, 'ro-','markerfacecolor','w'); 
-errorbar(1:nTR, circ_mean(errsize_e'*2*pi/180)*180/pi/2, circ_std(errsize_e'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1),'bo-','markerfacecolor','w'); 
-errorbar(1:nTR, circ_mean(errsize_l'*2*pi/180)*180/pi/2, circ_std(errsize_l'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1),'ro-','markerfacecolor','w'); 
-legend('Early','Late');
+
+xval = [1:nTR flip(1:nTR)]; 
+temp = errsize_e; 
+stdval  = circ_std(temp'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+meanval = circ_mean(temp'*2*pi/180)*180/pi/2; 
+yval = [-stdval+meanval +flip(stdval+meanval)] ; 
+patch(xval, yval, J_el(1,:),'facealpha',0.2,'edgecolor','none'); 
+plot(1:nTR,meanval,'color',J_el(1,:),'linewidth',1.5)
+
+temp = errsize_l; 
+stdval  = circ_std(temp'*2*pi/180)*180/pi/2/sqrt(length(sub_list)-1); 
+meanval = circ_mean(temp'*2*pi/180)*180/pi/2; 
+yval = [-stdval+meanval +flip(stdval+meanval)] ; 
+patch(xval, yval, J_el(2,:),'facealpha',0.2,'edgecolor','none'); 
+plot(1:nTR,meanval,'color',J_el(2,:),'linewidth',1.5)
 plot([0 14],[0 0],'k--'); 
-xlabel('Time (TR)'); ylabel('45-|err|'); 
+xlabel('Time (TR)'); ylabel('45-|error| (deg)'); 
+
+
 
 
 % [merged] Calculate circular mean (or median) and std (or iqr) 
@@ -330,13 +343,131 @@ end
 
 
 
+%% Average time-series (for insanity check)
+stim_m = []; 
+timing_m = []; 
+ref_m = []; 
+choice_m = []; 
+err_m = []; 
+dec_mne = []; 
+lapse_crit = 30 ;
+dec_val = []; 
+dec_val_h1 = []; 
+dec_val_h2 = []; 
+for isub = runSub
+    load(['/Volumes/ROOT/CSNL_temp/JWL/sensory_mnemonic_codes_in_visualcortex/data/decoded_earlydelay/VC_sub-' sub_list(isub,:) '_mean_dec.mat'])
+    
+    % Behavioral errors
+    errme = response - stimulus; 
+    errme(errme>90) = errme(errme>90) -180; 
+    errme(errme<-90) = errme(errme<-90) +180; 
+    
+    % fmri decoded error 
+    temp = Decoded_result.est' - stimulus; 
+    temp(temp>90) = temp(temp>90) -180; 
+    temp(temp<-90) = temp(temp<-90) +180; 
+    errme_fmri = temp ;
+    
+    % All merged
+    stim_m = [stim_m stimulus];
+    timing_m = [timing_m timing]; 
+    ref_m = [ref_m ref]; 
+    choice_m = [choice_m choice]; 
+    err_m = [err_m errme]; 
+    dec_mne = [dec_mne errme_fmri];
+    dec_val = [dec_val Decoded_result.est']; 
+    
+    temp = Decoded_result.est_firstHalf' - stimulus; 
+    temp(temp>90) = temp(temp>90) -180; 
+    temp(temp<-90) = temp(temp<-90) +180; 
+    dec_val_h1 = [dec_val_h1 temp]; 
+    temp = Decoded_result.est_secondHalf' - stimulus; 
+    temp(temp>90) = temp(temp>90) -180; 
+    temp(temp<-90) = temp(temp<-90) +180; 
+    dec_val_h2 = [dec_val_h2 temp]; 
+end
 
 
+for istim = 1:length(stimcond)
+    
+    ind = find(stim_m==stimcond(istim) & ~isnan(err_m) & abs(err_m)<lapse_crit); 
+    matMerge_behav.mean(istim) = circ_mean(err_m(ind)'*2*pi/180)*180/pi/2; 
+    matMerge_behav.iqr(istim) = iqr(err_m(ind)); 
+    
+    matMerge.mean(istim) = circ_mean(dec_mne(ind)'*2*pi/180)*180/pi/2; 
+    matMerge.iqr(istim) = iqr(dec_mne(ind)); 
+    
+    matMerge.mean_1h(istim) = circ_mean(dec_val_h1(ind)'*2*pi/180)*180/pi/2; 
+    matMerge.iqr_1h(istim) = iqr(dec_val_h1(ind)); 
+    matMerge.mean_2h(istim) = circ_mean(dec_val_h2(ind)'*2*pi/180)*180/pi/2; 
+    matMerge.iqr_2h(istim) = iqr(dec_val_h2(ind)); 
+    for ic = 1:2
+        ind = find(stim_m==stimcond(istim) & choice_m==ic & ~isnan(err_m) & abs(err_m)<lapse_crit); 
+
+        matMerge.mean_c(istim,ic) = circ_mean(dec_mne(ind)'*2*pi/180)*180/pi/2; 
+        matMerge.iqr_c(istim,ic)  = iqr(dec_mne(ind)); 
+    end
+end
+
+% Figure #1: cardinal bias and variance in BEHAVIOR
+set(figure(1000),'position',[1 1029 323 316]); clf; 
+SP = subplot(2,1,1); cla; hold on; 
+plot(stimcond, matMerge_behav.mean - circ_mean(matMerge_behav.mean'*2*pi/180)*180/pi/2,'k-','linewidth',1.5); 
+plot([0 180],[0 0],'k--'); 
+xlim([0 180]); 
+xticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('error bias (deg)'); 
+
+SP = subplot(2,1,2); cla; hold on; 
+plot(stimcond, matMerge_behav.iqr,'k-','linewidth',1.5); 
+xlim([0 180]); 
+xticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('error iqr (deg)'); 
 
 
+% Figure #2: decoded vs true orientation (mnemonic code) 
+set(figure(1001),'position',[1 636 340 333]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+scatter1 = scatter(stim_m, dec_val,'ko','markerfacecolor','k'); 
+scatter1.MarkerFaceAlpha = 0.05;
+scatter1.MarkerEdgeAlpha = 0;
+xlim([0 180]); 
+ylim([0 180]); 
+xticks(linspace(0,180,5)); 
+yticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('Decoded orientation'); 
 
 
+% Figure #3: check existence of cardinal bias and variance in decoded orientation
+set(figure(1002),'position',[325 1029 323 316]); clf; 
+SP = subplot(2,1,1); cla; hold on; 
+plot(stimcond, matMerge.mean - circ_mean(matMerge.mean'*2*pi/180)*180/pi/2,'k-','linewidth',1.5); 
+plot([0 180],[0 0],'k--'); 
+xlim([0 180]); 
+xticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('error bias (deg)'); 
 
+SP = subplot(2,1,2); cla; hold on; 
+plot(stimcond, matMerge.iqr,'k-','linewidth',1.5); 
+xlim([0 180]); 
+xticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('error iqr (deg)'); 
 
+% Figure #4: compare bias 
+set(figure(1002),'position',[325 1029 323 316]); clf; 
+SP = subplot(2,1,1); cla; hold on; 
+plot(stimcond, matMerge.mean_1h - circ_mean(matMerge.mean_1h'*2*pi/180)*180/pi/2,'b-','linewidth',1.5); 
+plot(stimcond, matMerge.mean_2h - circ_mean(matMerge.mean_2h'*2*pi/180)*180/pi/2,'r-','linewidth',1.5); 
+% legend('5-9TR','10-13TR');
+plot([0 180],[0 0],'k--'); 
+xlim([0 180]); 
+xticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('error bias (deg)'); 
 
-
+SP = subplot(2,1,2); cla; hold on; 
+plot(stimcond, matMerge.iqr_1h,'b-','linewidth',1.5); 
+plot(stimcond, matMerge.iqr_2h,'r-','linewidth',1.5); 
+legend('5-9TR','10-13TR');
+xlim([0 180]); 
+xticks(linspace(0,180,5)); 
+xlabel('Orientation'); ylabel('error iqr (deg)'); 
