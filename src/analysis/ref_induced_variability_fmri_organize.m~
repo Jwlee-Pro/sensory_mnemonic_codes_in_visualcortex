@@ -14,6 +14,8 @@ stimcond = 0:7.5:179;
 st_color = jet(length(stimcond))*0.8 ; 
 a = linspace(0,1,8); 
 ROI_color = customcolormap(a(1:8), [96 182 110; 146 195 68; 245 233 42; 235 143 49; 217 40 44; 121 77 142; 49 73 140; 13 132 134]/255); 
+J_el = [102, 126, 182; 182, 126, 102]/255; 
+nearfar_color = [170 121 66; 248 186 0; ]/255; 
 
 
 %% Main parameters
@@ -25,12 +27,6 @@ stimcond = 0:7.5:172.5;
 binCenter = -90:5:85 ; 
 nBin = length(binCenter); 
 
-matSub = {}; 
-matSub.mean = nan(length(stimcond), 2, length(sub_list)); 
-matSub.medi = nan(length(stimcond), 2, length(sub_list)); 
-matSub.std  = nan(length(stimcond), 2, length(sub_list)); 
-matSub.iqr  = nan(length(stimcond), 2, length(sub_list)); 
-
 stim_m = []; 
 timing_m = []; 
 ref_m = []; 
@@ -38,7 +34,7 @@ choice_m = [];
 err_m = []; 
 nObs = nan(length(stimcond), 2, length(sub_list)); 
 dec_mne = []; 
-lapse_crit = 30 ;
+lapse_crit = 20 ;
 
 errsize_e = nan(nTR, length(sub_list)); 
 errsize_l = nan(nTR, length(sub_list)); 
@@ -85,12 +81,162 @@ for isub = runSub
     
     errsize_e(:,isub) = 45-circ_mean(abs(errme_fmri(:,timing==1))'*2*pi/180)*180/pi/2; 
     errsize_l(:,isub) = 45-circ_mean(abs(errme_fmri(:,timing==2))'*2*pi/180)*180/pi/2; 
+    
+    % Within subject (behavior)
+    err_corr = cond_correct(errme, errme, ref, stimulus, 'c', 'c'); 
+    for ir = 1:length(refs)
+        ind = find(ref==refs(ir) & ~isnan(errme) & abs(errme)<lapse_crit); 
+        matMerge_sub.mean(ir,isub) = circ_m(errme(ind)'); 
+        matMerge_sub.iqr(ir,isub)  = circ_s(errme(ind)'); %iqr(errme(ind)); 
+        
+        ind = find(ref==refs(ir) & ~isnan(err_corr) & abs(errme)<lapse_crit); 
+        matMerge_sub_refcorr.mean(ir,isub) = circ_m(err_corr(ind)'); 
+        matMerge_sub_refcorr.iqr(ir,isub)  = circ_s(err_corr(ind)'); %iqr(err_corr(ind)); 
+    end
+    
+    errme_fmri_corr = nan(size(errme_fmri));
+    for iTR = 1:nTR
+        errme_fmri_corr(iTR,:) = cond_correct(errme, errme_fmri(iTR,:), ref, stimulus, 'c', 'c'); 
+        
+        ind = find(ref==refs(ir) & ~isnan(errme) & abs(errme)<lapse_crit); 
+        matfMRI_sub.mean(iTR,ir,isub) = circ_m(errme_fmri(iTR,ind)'); 
+        matfMRI_sub.iqr(iTR,ir,isub)  = circ_s(errme_fmri(iTR,ind)'); %iqr(errme(ind)); 
+        
+        ind = find(ref==refs(ir) & ~isnan(errme) & abs(errme)<lapse_crit); 
+        matfMRI_sub_refcorr.mean(iTR,ir,isub) = circ_m(errme_fmri_corr(iTR,ind)'); 
+        matfMRI_sub_refcorr.iqr(iTR,ir,isub)  = circ_s(errme_fmri_corr(iTR,ind)'); %iqr(err_corr(ind)); 
+        
+        ind = find(ref==refs(ir) & ~isnan(errme) & abs(errme)<lapse_crit & timing==1); 
+        matfMRI_sub_refcorr.mean_e(iTR,ir,isub) = circ_m(errme_fmri_corr(iTR,ind)'); 
+        matfMRI_sub_refcorr.iqr_e(iTR,ir,isub)  = circ_s(errme_fmri_corr(iTR,ind)'); %iqr(err_corr(ind)); 
+        
+        ind = find(ref==refs(ir) & ~isnan(errme) & abs(errme)<lapse_crit & timing==1); 
+        matfMRI_sub_refcorr.mean_l(iTR,ir,isub) = circ_m(errme_fmri_corr(iTR,ind)'); 
+        matfMRI_sub_refcorr.iqr_l(iTR,ir,isub)  = circ_s(errme_fmri_corr(iTR,ind)'); %iqr(err_corr(ind)); 
+    end
 end
 
-J_el = [102, 126, 182; 182, 126, 102]/255; 
+
+% Decision-induced variability 
+clear matMerge 
+for ir = 1:length(refs)
+    ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit); 
+    matMerge.mean(ir) = circ_m(err_m(ind)'); 
+    matMerge.iqr(ir)  = circ_s(err_m(ind)');%iqr(err_m(ind)); 
+end
+
+%% fMRI results
+dec_mne_c1 = nan(size(dec_mne)); 
+dec_mne_corr = nan(size(dec_mne)); 
+for iTR = 1:nTR
+    dec_mne_c1(iTR,:) = cond_correct(err_m, dec_mne(iTR,:), ref_m, stim_m, 'n', 'c'); 
+    dec_mne_corr(iTR,:) = cond_correct(err_m, dec_mne(iTR,:), ref_m, stim_m, 'c', 'c'); 
+end
+
+
+for iTR = 1:nTR
+    for ir = 1:length(refs)
+        ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit); 
+        matfMRI.mean(ir,iTR) = circ_m(dec_mne_c1(iTR,ind)'); 
+        matfMRI.iqr(ir,iTR)  = circ_s(dec_mne_c1(iTR,ind)');
+%         matfMRI.iqr(ir,iTR)  = iqr(dec_mne_c1(iTR,ind)); 
+        
+        ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==1); 
+        matfMRI.mean_e(ir,iTR) = circ_m(dec_mne_c1(iTR,ind)'); 
+        matfMRI.iqr_e(ir,iTR)  = circ_s(dec_mne_c1(iTR,ind)'); 
+%         matfMRI.iqr_e(ir,iTR)  = iqr(dec_mne_c1(iTR,ind)); 
+        
+        ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==2); 
+        matfMRI.mean_l(ir,iTR) = circ_m(dec_mne_c1(iTR,ind)'); 
+        matfMRI.iqr_l(ir,iTR)  = circ_s(dec_mne_c1(iTR,ind)'); 
+%         matfMRI.iqr_l(ir,iTR)  = iqr(dec_mne_c1(iTR,ind)); 
+        
+        ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit); 
+        matfMRI.mean_corr(ir,iTR) = circ_m(dec_mne_corr(iTR,ind)'); 
+        matfMRI.iqr_corr(ir,iTR)  = circ_s(dec_mne_corr(iTR,ind)'); 
+%         matfMRI.iqr_corr(ir,iTR)  = iqr(dec_mne_corr(iTR,ind)); 
+        
+        ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==1); 
+        matfMRI.mean_corr_e(ir,iTR) = circ_m(dec_mne_corr(iTR,ind)'); 
+        matfMRI.iqr_corr_e(ir,iTR)  = circ_s(dec_mne_corr(iTR,ind)'); 
+%         matfMRI.iqr_corr_e(ir,iTR)  = iqr(dec_mne_corr(iTR,ind)); 
+        
+        ind = find(ref_m==refs(ir) & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==2); 
+        matfMRI.mean_corr_l(ir,iTR) = circ_m(dec_mne_corr(iTR,ind)'); 
+        matfMRI.iqr_corr_l(ir,iTR)  = circ_s(dec_mne_corr(iTR,ind)'); 
+%         matfMRI.iqr_corr_l(ir,iTR)  = iqr(dec_mne_corr(iTR,ind)); 
+    end
+end
+
+
+
+
+%% Behavior summary figures 
+set(figure(1),'position',[1 1200 398 145]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+plot(refs,matMerge.mean ,'ko-','markerfacecolor','w'); 
+plot([-22, 22],[0 0]+nanmean(matMerge.mean),'k--'); 
+xlabel('reference'); ylabel('bias (deg)');
+xlim([-25, 25]); 
+
+SP = subplot(1,2,2); cla; hold on; 
+plot(refs,matMerge.iqr,'ko-','markerfacecolor','w'); 
+xlabel('reference'); ylabel('variability (iqr)');
+xlim([-25, 25]); 
+
+set(figure(2),'position',[1 1200 398 145]); clf; 
+SP = subplot(1,2,1); cla; hold on; 
+errorbar(refs,circ_m(matMerge_sub.mean'),circ_s(matMerge_sub.mean') ,'ko-','markerfacecolor','w','capsize',1); 
+plot([-22, 22],[0 0]+nanmean(matMerge.mean),'k--'); 
+xlabel('reference'); ylabel('bias (deg)');
+xlim([-25, 25]); 
+
+SP = subplot(1,2,2); cla; hold on; 
+errorbar(refs,circ_m(matMerge_sub.iqr'),circ_s(matMerge_sub.iqr') ,'ko-','markerfacecolor','w','capsize',1); 
+xlabel('reference'); ylabel('variability (iqr)');
+xlim([-25, 25]); 
+
+
+% Correct for stimulus/reference bias 
+set(figure(3),'position',[1 1145 190 200]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+plot(nanmean(matMerge_sub.iqr(2:4,:),1), nanmean(matMerge_sub.iqr([1 5],:),1),'ko'); 
+plot([5 20], [5 20],'k--'); 
+xlim([5 20]); 
+ylim([5 20]); 
+[h,p,ci,stats] = ttest(nanmean(matMerge_sub.iqr(2:4,:),1) - nanmean(matMerge_sub.iqr([1 5],:),1)); 
+title(['p = ' num2str(p)]); 
+xlabel('IQR (near)'); ylabel('IQR (far)'); 
+
+
+set(figure(4),'position',[192 1145 190 200]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+plot(nanmean(matMerge_sub_refcorr.iqr(2:4,:),1), nanmean(matMerge_sub_refcorr.iqr([1 5],:),1),'ro'); 
+plot([4 16], [4 16],'k--'); 
+xlim([4 16]); 
+ylim([4 16]); 
+[h,p,ci,stats] = ttest(nanmean(matMerge_sub_refcorr.iqr(2:4,:),1) - nanmean(matMerge_sub_refcorr.iqr([1 5],:),1)); 
+title(['p = ' num2str(p)]); 
+xlabel('IQR (near)'); ylabel('IQR (far)'); 
+
+
+
+set(figure(5),'position',[192 1145 190 200]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+errorbar(refs,circ_m(matMerge_sub.iqr'),circ_s(matMerge_sub.iqr') ,'ko-','markerfacecolor','w','capsize',1); 
+xlabel('reference'); ylabel('variability (iqr)');
+xlim([-25, 25]); 
+
+set(figure(6),'position',[192 1145 190 200]); clf; 
+SP = subplot(1,1,1); cla; hold on; 
+errorbar(refs,circ_m(matMerge_sub_refcorr.iqr'),circ_s(matMerge_sub_refcorr.iqr') ,'ro-','markerfacecolor','w','capsize',1); 
+xlabel('reference'); ylabel('variability (iqr)');
+xlim([-25, 25]); 
+
+
 
 % Check fidelity
-figure(1); clf; 
+set(figure(7),'position',[1 1177 206 168]); clf; 
 SP = subplot(1,1,1); cla; hold on; 
 
 xval = [1:nTR flip(1:nTR)]; 
@@ -111,76 +257,82 @@ plot([0 14],[0 0],'k--');
 xlabel('Time (TR)'); ylabel('45-|error| (deg)'); 
 
 
+set(figure(8),'position',[1 972 599 373]); clf; 
+SP = subplot(2,2,1); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_e(2:4,:),1),'b--','color',J_el(1,:),'linewidth',1.4); 
+plot(1:nTR, nanmean(matfMRI.iqr_e([1 5],:),1),'b-','color',J_el(1,:),'linewidth',1.4); 
+xlabel('Time (TR)'); ylabel('IQR (deg)'); 
+legend('near','far'); %ylim([60 100]); 
 
+SP = subplot(2,2,3); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_e(2:4,:),1) - nanmean(matfMRI.iqr_e([1 5],:),1),'ko-','markerfacecolor','w'); 
+plot([0 14],[0 0],'k--'); 
+xlabel('Time (TR)'); ylabel('\Delta IQR (deg)'); 
 
-% [merged] Calculate circular mean (or median) and std (or iqr) 
-matMerge = {}; 
-matMerge.mean = nan(length(stimcond), 2); 
-matMerge.medi = nan(length(stimcond), 2); 
-matMerge.std  = nan(length(stimcond), 2); 
-matMerge.iqr  = nan(length(stimcond), 2);
+SP = subplot(2,2,2); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_l(2:4,:),1),'b--','color',J_el(2,:),'linewidth',1.4); 
+plot(1:nTR, nanmean(matfMRI.iqr_l([1 5],:),1),'b-','color',J_el(2,:),'linewidth',1.4); 
+xlabel('Time (TR)'); ylabel('IQR (deg)'); 
+legend('near','far'); %ylim([60 100]); 
 
-for istim = 1:length(stimcond)
-    for ic = 1:2
-        ind = find(stim_m==stimcond(istim) & choice_m==ic & ~isnan(err_m) & abs(err_m)<lapse_crit); 
-
-        matMerge.mean(istim,ic) = circ_mean(err_m(ind)'*2*pi/180)*180/pi/2; 
-        matMerge.medi(istim,ic) = circ_median(err_m(ind)'*2*pi/180)*180/pi/2; 
-        matMerge.std(istim,ic)  = circ_std(err_m(ind)'*2*pi/180)*180/pi/2; 
-        matMerge.iqr(istim,ic)  = iqr(err_m(ind)); 
-    end
-end
-
-figure(99); clf; 
-SP = subplot(1,1,1); clf; 
-hist(err_m(abs(err_m)<lapse_crit),40)
-xlim([-45 45]); 
-xlabel('error (deg)'); 
+SP = subplot(2,2,4); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_l(2:4,:),1) - nanmean(matfMRI.iqr_l([1 5],:),1),'ko-','markerfacecolor','w'); 
+plot([0 14],[0 0],'k--'); 
+xlabel('Time (TR)'); ylabel('\Delta IQR (deg)'); 
 
 
 
-% fmri analysis
-matMerge_fmri = {}; 
-matMerge_fmri.mean = nan(length(stimcond), 2, 2, 14); 
-matMerge_fmri.iqr  = nan(length(stimcond), 2, 2, 14);
 
-matMerge_fmri.mean_avg = nan(length(stimcond), 2, 2); 
-matMerge_fmri.iqr_avg  = nan(length(stimcond), 2, 2);
-for istim = 1:length(stimcond)
-    for ic = 1:2
-        ind = find(stim_m==stimcond(istim) & choice_m==ic & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==1); 
-        matMerge_fmri.mean(istim,ic,1,:) = circ_mean(dec_mne(:,ind)'*2*pi/180)*180/pi/2; 
-        for iTR = 1:14
-            matMerge_fmri.iqr(istim,ic,1,iTR)  = iqr(dec_mne(iTR,ind)); 
-        end
-        matMerge_fmri.mean_avg(istim,ic,1)  =  circ_mean(circ_mean(dec_mne(5:13,ind)*2*pi/180)')*180/pi/2; 
-        matMerge_fmri.iqr_avg(istim,ic,1)  =  iqr(circ_mean(dec_mne(5:13,ind)*2*pi/180)'*180/pi/2); 
-        
-        ind = find(stim_m==stimcond(istim) & choice_m==ic & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==2); 
-        matMerge_fmri.mean(istim,ic,2,:) = circ_mean(dec_mne(:,ind)'*2*pi/180)*180/pi/2; 
-        matMerge_fmri.mean_avg(istim,ic,2)  =  circ_mean(circ_mean(dec_mne(5:13,ind)*2*pi/180)')*180/pi/2; 
-        for iTR = 1:14
-            matMerge_fmri.iqr(istim,ic,2,iTR)  = iqr(dec_mne(iTR,ind)); 
-        end
-        matMerge_fmri.iqr_avg(istim,ic,2)  =  iqr(circ_mean(dec_mne(5:13,ind)*2*pi/180)'*180/pi/2); 
-    end
-end
+set(figure(9),'position',[1 972 599 373]); clf; 
+SP = subplot(2,2,1); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_e(2:4,:),1),'b--','color',J_el(1,:),'linewidth',1.4); 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_e([1 5],:),1),'b-','color',J_el(1,:),'linewidth',1.4); 
+xlabel('Time (TR)'); ylabel('IQR (deg)'); 
+legend('near','far'); %ylim([60 90]); 
 
-% % consider only near condition 
-% for istim = 1:length(stimcond)
-%     for ic = 1:2
-%         ind = find(stim_m==stimcond(istim) & choice_m==ic & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==1 & abs(ref_m)<5); 
-%         matMerge_fmri.mean(istim,ic,1,:) = circ_mean(dec_mne(:,ind)'*2*pi/180)*180/pi/2; 
-%         for iTR = 1:14
-%             matMerge_fmri.iqr(istim,ic,1,iTR)  = iqr(dec_mne(iTR,ind)); 
-%         end
-%         ind = find(stim_m==stimcond(istim) & choice_m==ic & ~isnan(err_m) & abs(err_m)<lapse_crit & timing_m==2 & abs(ref_m)<5); 
-%         matMerge_fmri.mean(istim,ic,2,:) = circ_mean(dec_mne(:,ind)'*2*pi/180)*180/pi/2; 
-%         for iTR = 1:14
-%             matMerge_fmri.iqr(istim,ic,2,iTR)  = iqr(dec_mne(iTR,ind)); 
-%         end
-%     end
-% end
+SP = subplot(2,2,3); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_e(2:4,:),1) - nanmean(matfMRI.iqr_corr_e([1 5],:),1),'ko-','markerfacecolor','w'); 
+plot([0 14],[0 0],'k--'); 
+xlabel('Time (TR)'); ylabel('\Delta IQR (deg)'); 
+
+SP = subplot(2,2,2); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_l(2:4,:),1),'b--','color',J_el(2,:),'linewidth',1.4); 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_l([1 5],:),1),'b-','color',J_el(2,:),'linewidth',1.4); 
+xlabel('Time (TR)'); ylabel('IQR (deg)'); 
+legend('near','far'); %ylim([60 90]); 
+
+SP = subplot(2,2,4); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_l(2:4,:),1) - nanmean(matfMRI.iqr_corr_l([1 5],:),1),'ko-','markerfacecolor','w'); 
+plot([0 14],[0 0],'k--'); 
+xlabel('Time (TR)'); ylabel('\Delta IQR (deg)'); 
+
+%
+
+set(figure(10),'position',[1 972 599 373]); clf; 
+SP = subplot(2,2,1); cla; hold on; 
+plot(1:nTR, nanmean(nanmean(matfMRI_sub_refcorr.iqr_e(:,2:4,:),2),3),'b--','color',J_el(1,:),'linewidth',1.4); 
+plot(1:nTR, nanmean(nanmean(matfMRI_sub_refcorr.iqr_e(:,[1 5],:),2),3),'b-','color',J_el(1,:),'linewidth',1.4); 
+xlabel('Time (TR)'); ylabel('IQR (deg)'); 
+legend('near','far'); %ylim([60 90]); 
+
+SP = subplot(2,2,3); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_e(2:4,:),1) - nanmean(matfMRI.iqr_corr_e([1 5],:),1),'ko-','markerfacecolor','w'); 
+plot([0 14],[0 0],'k--'); 
+xlabel('Time (TR)'); ylabel('\Delta IQR (deg)'); 
+
+SP = subplot(2,2,2); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_l(2:4,:),1),'b--','color',J_el(2,:),'linewidth',1.4); 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_l([1 5],:),1),'b-','color',J_el(2,:),'linewidth',1.4); 
+xlabel('Time (TR)'); ylabel('IQR (deg)'); 
+legend('near','far'); %ylim([60 90]); 
+
+SP = subplot(2,2,4); cla; hold on; 
+plot(1:nTR, nanmean(matfMRI.iqr_corr_l(2:4,:),1) - nanmean(matfMRI.iqr_corr_l([1 5],:),1),'ko-','markerfacecolor','w'); 
+plot([0 14],[0 0],'k--'); 
+xlabel('Time (TR)'); ylabel('\Delta IQR (deg)'); 
+
+
+asdf
 
 
 %% Figure drawing
