@@ -465,12 +465,4 @@ title(['p=' num2str(p) ]);
 
 % Individual analysis
 div_fmri = nanmean(near_e(6:11,:),1) ./ nanmean(far_e(6:11,:),1); 
-div_beh  = nanmean(matBeh.ref.std(2:4,:)) ./ nanmean(matBeh.ref.std([1 5],:)); 
-
-figure(19); clf; 
-SP = subplot(1,1,1); cla; hold on; 
-plot(div_beh, div_fmri, 'ko'); 
-[coef, pval] = corr(div_beh', div_fmri')
-xlabel('DIV behavior'); ylabel('DIV fmri (early Dm)');
-title(['r=' num2str(coef) ', p=' num2str(pval) ]); 
 
